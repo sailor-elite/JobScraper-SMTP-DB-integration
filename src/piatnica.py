@@ -28,16 +28,22 @@ class PiatnicaJobScrapper:
             name_text = jobname.get_text(strip=True) if jobname else "Brak nazwy"
 
             jobdate = element.find(class_='post-date')
-            date_text = jobdate.get_text(strip=True) if jobdate else "Brak daty"
+            if jobdate:
+                date_text = jobdate.get_text(strip=True).replace("Data Dodania -", "").replace("Data dodania:",
+                                                                                               "").strip()
+            else:
+                date_text = "No date"
 
             joblocation = element.find(class_='post-place')
-            location_text = joblocation.get_text(strip=True) if joblocation else "Brak lokalizacji"
+            location_text = joblocation.get_text(strip=True) if joblocation else "no location"
 
             job_post = JobPost(name_text, date_text, location_text)
             self.job_posts.append(job_post)
 
+        return self.job_posts
+
     def display_jobs(self):
         for job in self.job_posts:
-            job = print(job)
-        return job
+            print(job)
+        return None
 

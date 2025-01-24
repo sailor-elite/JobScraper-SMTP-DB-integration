@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
+
 class JobUpdate:
     def __init__(self, update_date):
         self.update_date = update_date
@@ -8,12 +9,14 @@ class JobUpdate:
     def __str__(self):
         return f"{self.update_date}"
 
+
 class JobPosition:
     def __init__(self, position):
         self.position = position
 
     def __str__(self):
         return f"{self.position}"
+
 
 class ZuradJobScraper:
     def __init__(self, url):
@@ -35,7 +38,7 @@ class ZuradJobScraper:
                 if element.get('class') == ['col-md-12']:
                     h3_elements = element.find_all("h3")
                     for h3 in h3_elements:
-                        date_text = h3.get_text(strip=True)
+                        date_text = h3.get_text(strip=True).replace("Ostatnia aktualizacja:", "").strip()
                         self.update_dates.append(JobUpdate(date_text))
 
     def parse_job_positions(self):
@@ -46,11 +49,10 @@ class ZuradJobScraper:
 
     def display_updates(self):
         for update in self.update_dates:
-            update = print(update)
-        return update
+            print(update)
+        return None
 
     def display_job_positions(self):
         for job in self.job_positions:
-            job = print(job)
-        return job
-
+            print(job)
+        return None

@@ -2,26 +2,64 @@ from piatnica import PiatnicaJobScrapper
 from Zurad import ZuradJobScraper
 from Pgz import PGZJobScraper
 from OrlenPetrobaltic import OrlenJobScraper
+from db_handler import DataHandler
+from db_init import Database
+
+data_handler = DataHandler('jobs.db')
+def Database_init():
+    sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS projects (
+                                    id integer PRIMARY KEY,
+                                    name text NOT NULL,
+                                    date text NOT NULL,
+                                    job text NOT NULL
+                                ); """
+    db = Database('jobs.db')
+    db.conn = db.create_connection(db.db_file)
+    db.create_table(sql_create_projects_table)
+    db.conn.close()
+
+
+
+
 
 def Piatnica():
     url = "https://piatnica.com.pl/biznes/praca/"
     scraper = PiatnicaJobScrapper(url)
     scraper.fetch_data()
-    scraper.parse_jobs()
+    jobs = scraper.parse_jobs()
     scraper.display_jobs()
+    for job in jobs:
+        job_data = (job.name, job.date, job.location)
+        data_handler.insert_data(job_data)
+
 
 def PGZ():
-    scraper = PGZJobScraper("https://grupapgz.pl/kariera/")
-    scraper.ScrapeAllJobs()
+    scraper = PGZJobScraper()
+    jobs = scraper.scrape_all_jobs()
+
+    if jobs:
+        print("Oferty pracy PGZ:")
+        for job in jobs:
+            job_data = (job.title, job.date_posted, job.location)
+            data_handler.insert_data(job_data)
+
+    else:
+        print("Brak ofert pracy z PGZ.")
+
 
 def Zurad():
     url = "https://zurad.com.pl/ogloszenia-o-prace/"
     scraper = ZuradJobScraper(url)
+
     scraper.fetch_data()
+
     scraper.parse_update_dates()
     scraper.parse_job_positions()
-    scraper.display_updates()
-    scraper.display_job_positions()
+    date = scraper.update_dates
+    for job in scraper.job_positions:
+        job_data = (job.position, str(date[0]), 'Zurad')
+        data_handler.insert_data(job_data)
+
 
 def Orlen():
     url = (
@@ -34,13 +72,35 @@ def Orlen():
 
     if html_data:
         scraper.parse_jobs(html_data)
-        scraper.display_jobs() 
+        jobs = scraper.job_posts
+        for job in jobs:
+            job_data = (job.position, job.date, job.location)
+            data_handler.insert_data(job_data)
 
-print("PIATNICA: " + '\n')
-Piatnica()
-print('\n' + "ZURAD: " + '\n')
-Zurad()
-print('\n' + "ORLEN PETROBALTIC: " + '\n')
-Orlen()
-print('\n' + "PGZ: " + '\n')
-PGZ()
+
+if __name__ == "__main__":
+
+    Database_init()
+
+    try:
+        print('\n' + "ZURAD: " + '\n')
+        Zurad()
+    except Exception as e:
+        print(f"errror in ZURAD: {e}")
+
+    try:
+        print("PIATNICA: " + '\n')
+        Piatnica()
+    except Exception as e:
+        print(f"error in PIATNICA: {e}")
+    try:
+        print('\n' + "PGZ: " + '\n')
+        PGZ()
+    except Exception as e:
+        print(f"error in PGZ: {e}")
+
+    try:
+        print('\n' + "ORLEN PETROBALTIC: " + '\n')
+        Orlen()
+    except Exception as e:
+        print(f"error in ORLEN PETROBALTIC: {e}")

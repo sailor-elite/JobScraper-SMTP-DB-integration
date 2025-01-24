@@ -1,73 +1,98 @@
 import requests
-from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
 
 class JobPost:
-    def __init__(self, position, location, company):
-        self.position = position
+    def __init__(self, title, date_posted, location):
+        self.title = title
+        self.date_posted = date_posted
         self.location = location
-        self.company = company
 
     def __str__(self):
-        return f"STANOWISKO: {self.position}\nMIEJSCOWOŚĆ: {self.location}\nFIRMA: {self.company}\n"
+        return f"Position: {self.title}\nDate: {self.date_posted}\nLocation: {self.location}\n"
 
 
 class PGZJobScraper:
-    def __init__(self, base_url):
-        self.base_url = base_url
-        self.job_posts = []
+    def __init__(self):
+        self.api_url = "https://pcw-api.softgarden.de/widget-api/job-list/jobAds/"
+        self.headers = {
+            "Content-Type": "application/json",
+            "Origin": "https://kariera.grupapgz.pl",
+            "Referer": "https://kariera.grupapgz.pl/",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36"
+        }
+        self.payload = {
+            "userId": "b87400e0-b37d-4ba9-85ea-346bd54a094b",
+            "projectId": "ec53ad54-7b23-47d4-b33b-f2244a27a759",
+            "pageId": "dfa8c272-7e43-441e-bc43-ab4c95ada584",
+            "locale": "pl",
+            "isActiveCustomJobPages": False,
+            "isUseLayoutsOfSubsidiaries": False,
+            "filterStatus": {
+                "careerLevel": False,
+                "category": True,
+                "partnership": True,
+                "region": True,
+                "location": True
+            },
+            "listState": {
+                "search": "",
+                "location": {},
+                "filters": {},
+                "filterPredictions": {}
+            },
+            "jobListTitleNew": "Nowa",
+            "isForCurrentLocale": False,
+            "isStandalone": False
+        }
 
-    def FetchData(self, url):
+    def fetch_jobs(self, page_number=1, jobs_per_page=1024):
+
+        self.payload.update({
+            "pageNumber": page_number,
+            "numberOfJobsOnPage": jobs_per_page
+        })
+
         try:
-            response = requests.get(url)
+            response = requests.post(self.api_url, headers=self.headers, json=self.payload)
             response.raise_for_status()
-            return response.text
+            return response.json()
         except requests.RequestException as e:
-            print(f"Problem z pobraniem danych: {e}")
+            print(f"error with getting date: {e}")
             return None
 
-    def ParseAndOutput(self, html):
-        soup = BeautifulSoup(html, 'html.parser')
-        tags = soup.find_all("td")
+    def parse_jobs(self, data):
 
-        job_data = []
-        for index, tag in enumerate(tags):
-            job_data.append(tag.get_text(strip=True))
-            if (index + 1) % 3 == 0:
-                position, location, company = job_data
-                job_post = JobPost(position, location, company)
-                self.job_posts.append(job_post)
-                print(job_post)
-                job_data = []
+        jobs = data.get("data", {}).get("jobs", [])
 
-    def LastPageNumber(self):
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()))
-        driver.get(self.base_url)
-        try:
-            element = driver.find_element(By.CLASS_NAME, "skk_pager_last")
-            page_number = int(element.text.strip())
-        except Exception as e:
-            print(f"Błąd podczas odczytu numeru ostatniej strony: {e}")
-            page_number = 1
-        driver.quit()
-        return page_number
+        job_posts = []
+        for job in jobs:
+            title = job.get("title", "no title")
+            date_posted = job.get("date", "no date")
+            location = job.get("location", "no location")
+            job_posts.append(JobPost(title, date_posted, location))
+        return job_posts
 
-    def ScrapeAllJobs(self):
-        last_page = self.LastPageNumber()
+    def scrape_all_jobs(self):
 
-        for page_number in range(1, last_page + 1):
-            print(f"STRONA: {page_number}\n")
-            url = (
-                f"https://skk.erecruiter.pl/GetHtml.ashx?"
-                f"cfg=055531097fe04079a190d2f210485080&grid=rows&pn={page_number}&jt=&wp=&kw="
-                f"&sc=skk_col_publish_date&sd=desc&jsoncallback=jQuery3500673159553047447_1735646463673"
-            )
-            html_data = self.FetchData(url)
-            if html_data:
-                self.ParseAndOutput(html_data)
+        all_jobs = []
+        page_number = 1
+
+        while True:
+            print(f"Downloading site number {page_number}...")
+            data = self.fetch_jobs(page_number=page_number)
+
+            if not data:
+                print("No further data or error.")
+                break
+
+            job_posts = self.parse_jobs(data)
+            if not job_posts:
+                print("No further job offers.")
+                break
+
+            all_jobs.extend(job_posts)
+            page_number += 1
+
+        return all_jobs
 
 
