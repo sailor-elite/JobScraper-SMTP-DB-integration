@@ -38,7 +38,7 @@ class ZuradJobScraper:
                 if element.get('class') == ['col-md-12']:
                     h3_elements = element.find_all("h3")
                     for h3 in h3_elements:
-                        date_text = h3.get_text(strip=True).replace("Ostatnia aktualizacja:", "").strip()
+                        date_text = h3.get_text(strip=True).replace("Ostatnia aktualizacja:", "").replace("r.", "").strip()
                         self.update_dates.append(JobUpdate(date_text))
 
     def parse_job_positions(self):

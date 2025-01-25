@@ -6,20 +6,20 @@ from db_handler import DataHandler
 from db_init import Database
 
 data_handler = DataHandler('jobs.db')
+
+
 def Database_init():
     sql_create_projects_table = """ CREATE TABLE IF NOT EXISTS projects (
                                     id integer PRIMARY KEY,
                                     name text NOT NULL,
                                     date text NOT NULL,
+                                    location text NOT NULL,
                                     job text NOT NULL
                                 ); """
     db = Database('jobs.db')
     db.conn = db.create_connection(db.db_file)
     db.create_table(sql_create_projects_table)
     db.conn.close()
-
-
-
 
 
 def Piatnica():
@@ -29,7 +29,7 @@ def Piatnica():
     jobs = scraper.parse_jobs()
     scraper.display_jobs()
     for job in jobs:
-        job_data = (job.name, job.date, job.location)
+        job_data = (job.name, job.date, job.location, 'Piatnica')
         data_handler.insert_data(job_data)
 
 
@@ -40,7 +40,7 @@ def PGZ():
     if jobs:
         print("Oferty pracy PGZ:")
         for job in jobs:
-            job_data = (job.title, job.date_posted, job.location)
+            job_data = (job.title, job.date_posted, job.location, 'PGZ')
             data_handler.insert_data(job_data)
 
     else:
@@ -57,7 +57,7 @@ def Zurad():
     scraper.parse_job_positions()
     date = scraper.update_dates
     for job in scraper.job_positions:
-        job_data = (job.position, str(date[0]), 'Zurad')
+        job_data = (job.position, str(date[0]), 'Ostrów Mazowiecka', 'Zurad')
         data_handler.insert_data(job_data)
 
 
@@ -74,7 +74,7 @@ def Orlen():
         scraper.parse_jobs(html_data)
         jobs = scraper.job_posts
         for job in jobs:
-            job_data = (job.position, job.date, job.location)
+            job_data = (job.position, job.date, job.location, 'Orlen')
             data_handler.insert_data(job_data)
 
 
