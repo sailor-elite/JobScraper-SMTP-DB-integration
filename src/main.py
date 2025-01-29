@@ -4,6 +4,8 @@ from Pgz import PGZJobScraper
 from OrlenPetrobaltic import OrlenJobScraper
 from db_handler import DataHandler
 from db_init import Database
+from src import JobOffersEmail
+from src.SMTP_Handler import SMTP_Email
 
 data_handler = DataHandler('jobs.db')
 
@@ -27,7 +29,6 @@ def Piatnica():
     scraper = PiatnicaJobScrapper(url)
     scraper.fetch_data()
     jobs = scraper.parse_jobs()
-    scraper.display_jobs()
     for job in jobs:
         job_data = (job.name, job.date, job.location, 'Piatnica')
         data_handler.insert_data(job_data)
@@ -104,3 +105,18 @@ if __name__ == "__main__":
         Orlen()
     except Exception as e:
         print(f"error in ORLEN PETROBALTIC: {e}")
+
+    try:
+        recipients = ["Anetapk8@gmail.com", "pb1@o2.pl", "mysior1239@gmail.com"]
+        job_offers_email = JobOffersEmail.JobOffersEmail(db_path="jobs.db")
+        email_config = SMTP_Email()
+        email_config.send_email(
+            email_receivers=recipients,
+            subject=job_offers_email.generate_subject(),
+            body=job_offers_email.generate_body(),
+            pdf_path=None,
+            is_html=False
+        )
+        print("Email sent successfully!")
+    except Exception as e:
+        print(f"An error occurred: {e}")
