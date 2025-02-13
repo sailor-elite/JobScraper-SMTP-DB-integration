@@ -1,3 +1,6 @@
+import json
+import os
+
 from piatnica import PiatnicaJobScrapper
 from Zurad import ZuradJobScraper
 from Pgz import PGZJobScraper
@@ -6,6 +9,7 @@ from db_handler import DataHandler
 from db_init import Database
 from src import JobOffersEmail
 from src.SMTP_Handler import SMTP_Email
+from dotenv import load_dotenv
 
 data_handler = DataHandler('jobs.db')
 
@@ -107,7 +111,9 @@ if __name__ == "__main__":
         print(f"error in ORLEN PETROBALTIC: {e}")
 
     try:
-        recipients = ["Anetapk8@gmail.com", "pb1@o2.pl", "mysior1239@gmail.com"]
+        load_dotenv()
+        email_receiver_str = os.getenv("EMAIL_RECEIVER")
+        recipients = json.loads(email_receiver_str) if email_receiver_str else []
         job_offers_email = JobOffersEmail.JobOffersEmail(db_path="jobs.db")
         email_config = SMTP_Email()
         email_config.send_email(
