@@ -22,6 +22,7 @@ JobScraper-SMTP-DB-integration is a script that automates the process of fetchin
    ```env
    EMAIL_SENDER=your_email@example.com
    EMAIL_PASSWORD=your_email_password
+   EMAIL_RECEIVER='["email_receiver", "email_receiver", "email_receiver", "etc" ]'
    ```
 
 ## Running the Script
