@@ -1,3 +1,4 @@
 /src/jobs.db
 /src/.env
 
+/src/job_scraper.bat

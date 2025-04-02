@@ -7,10 +7,10 @@ from Pgz import PGZJobScraper
 from OrlenPetrobaltic import OrlenJobScraper
 from db_handler import DataHandler
 from db_init import Database
-from src import JobOffersEmail
-from src.SMTP_Handler import SMTP_Email
+import JobOffersEmail
+from SMTP_Handler import SMTP_Email
 from dotenv import load_dotenv
-
+from OLX_Lomza import OLX_Scrapper
 data_handler = DataHandler('jobs.db')
 
 
@@ -27,6 +27,12 @@ def Database_init():
     db.create_table(sql_create_projects_table)
     db.conn.close()
 
+def OLX_Lomza():
+    scraper = OLX_Scrapper()
+    jobs = scraper.fetch_jobs()
+    for job in jobs:
+        job_data = (job['name'], job['date'], job['location'], job['source'])
+        data_handler.insert_data(job_data)
 
 def Piatnica():
     url = "https://piatnica.com.pl/biznes/praca/"
@@ -88,30 +94,36 @@ if __name__ == "__main__":
     Database_init()
 
     try:
-        print('\n' + "ZURAD: " + '\n')
-        Zurad()
+        print('\n' + "OLX: " + '\n')
+        OLX_Lomza()
     except Exception as e:
-        print(f"errror in ZURAD: {e}")
+        print(f"errror in OLX: {e}")
+
+    # try:
+    #     print('\n' + "ZURAD: " + '\n')
+    #     Zurad()
+    # except Exception as e:
+    #     print(f"errror in ZURAD: {e}")
+    #
+    # try:
+    #     print("PIATNICA: " + '\n')
+    #     Piatnica()
+    # except Exception as e:
+    #     print(f"error in PIATNICA: {e}")
+    # try:
+    #     print('\n' + "PGZ: " + '\n')
+    #     PGZ()
+    # except Exception as e:
+    #     print(f"error in PGZ: {e}")
+    #
+    # try:
+    #     print('\n' + "ORLEN PETROBALTIC: " + '\n')
+    #     Orlen()
+    # except Exception as e:
+    #     print(f"error in ORLEN PETROBALTIC: {e}")
 
     try:
-        print("PIATNICA: " + '\n')
-        Piatnica()
-    except Exception as e:
-        print(f"error in PIATNICA: {e}")
-    try:
-        print('\n' + "PGZ: " + '\n')
-        PGZ()
-    except Exception as e:
-        print(f"error in PGZ: {e}")
-
-    try:
-        print('\n' + "ORLEN PETROBALTIC: " + '\n')
-        Orlen()
-    except Exception as e:
-        print(f"error in ORLEN PETROBALTIC: {e}")
-
-    try:
-        load_dotenv()
+        load_dotenv(dotenv_path="C:/Users/Glutek/PycharmProjects/JobScraper-SMTP-DB-integration/src/.env")
         email_receiver_str = os.getenv("EMAIL_RECEIVER")
         recipients = json.loads(email_receiver_str) if email_receiver_str else []
         job_offers_email = JobOffersEmail.JobOffersEmail(db_path="jobs.db")
@@ -126,3 +138,4 @@ if __name__ == "__main__":
         print("Email sent successfully!")
     except Exception as e:
         print(f"An error occurred: {e}")
+
