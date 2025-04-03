@@ -40,6 +40,7 @@ JobScraper-SMTP-DB-integration/
 │   │── JobOffersEmail.py    # Handles email notifications for job offers
 │   │── jobs.db              # SQLite database storing job offers
 │   │── main.py              # Main script entry point
+│   │── OLX_Lomza.py         # Scraper for OLX Łomża job offers
 │   │── OrlenPetrobaltic.py  # Scraper for Orlen Petrobaltic job offers
 │   │── Pgz.py               # Scraper for PGZ job offers
 │   │── piatnica.py          # Scraper for Piatnica job offers
