@@ -123,7 +123,7 @@ if __name__ == "__main__":
     #     print(f"error in ORLEN PETROBALTIC: {e}")
 
     try:
-        load_dotenv(dotenv_path="C:/Users/Glutek/PycharmProjects/JobScraper-SMTP-DB-integration/src/.env")
+        load_dotenv()
         email_receiver_str = os.getenv("EMAIL_RECEIVER")
         recipients = json.loads(email_receiver_str) if email_receiver_str else []
         job_offers_email = JobOffersEmail.JobOffersEmail(db_path="jobs.db")
