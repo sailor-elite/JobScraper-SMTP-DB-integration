@@ -10,7 +10,7 @@ class JobOffersEmail:
 
         today = date.today().isoformat()
         query = """
-        SELECT name, date, location, job
+        SELECT name, location, job
         FROM projects
         WHERE date = ?;
         """
@@ -30,7 +30,7 @@ class JobOffersEmail:
 
         body = "Today's Job Offers:\n\n"
         for offer in offers:
-            name, job_date, location, company = offer
-            body += f"Job: {name}\nDate: {job_date}\nLocation: {location}\nCompany: {company}\n\n"
+            name, location, company = offer
+            body += f"Job: {name}\nLocation: {location}\nCompany: {company}\n\n"
 
         return body
