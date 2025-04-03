@@ -31,35 +31,47 @@ class OLX_Scrapper:
                     max_number = raw_numbers
 
             jobs = []
-
+            print(max_number)
             for i in range(0,max_number):
                 new_URL = self.URL + f"?page={i}"
                 job_response = requests.get(new_URL)
                 job_response.raise_for_status()
                 soup = BeautifulSoup(job_response.text, "html.parser")
-                job_names = soup.find_all("a", class_="css-13gxtrp")
-                job_employees = soup.find_all("p", class_="css-1rpfcm7")
+                if "css-1rpfcm7" in soup.find_all("div", class_="css-1ib10r7"):
+                    job_names = soup.find_all("a", class_="css-13gxtrp")
+                    job_employees = soup.find_all("p", class_="css-1rpfcm7")
+                elif "css-1rpfcm7" not in soup.find_all("div", class_="css-1ib10r7"):
+                    job_names = soup.find_all("a", class_="css-13gxtrp")
+                    job_employees = soup.find_all("a", class_="css-13gxtrp")
                 job_dates = soup.find_all("p", class_="css-996jis")
                 print(new_URL)
                 for name, place, date in zip(job_names,job_employees, job_dates):
                     job_title = name.get_text(strip=True)
                     job_location = place.get_text(strip=True)
 
-                    job_date = date.get_text(strip=True)
+                    job_date = date.get_text(strip=True).replace("\xa0", " ").strip()
+                    print(job_date)
                     if "Dzisiaj" in job_date:
                         job_date = job_date.replace(job_date, datetime.today().strftime("%d.%m.%Y"))
                     elif "Odświeżono dnia" in job_date:
-                        job_date = job_date.replace("Odświeżono dnia", "")
-                    elif "Dzisiaj" not in job_date:
+                        job_date = job_date.replace("Odświeżono dnia ", "")
+                    if "Dzisiaj" not in job_date:
                         for month_name, month_num in months_map.items():
                             print(job_date, " ", month_name)
                             if month_name in job_date:
-                                job_date = job_date.replace(month_name, month_num).replace(" ","")
-                                job_date = datetime.strptime(job_date, "%d-%m-%Y").strftime("%d.%m.%Y")
+                                job_date = job_date.replace(month_name, month_num).replace(" ", "")
+                                try:
+                                    job_date = datetime.strptime(job_date, "%d-%m-%Y").strftime("%d.%m.%Y")
+                                except ValueError as e:
+                                    print(f"Błąd parsowania: {e} dla daty: {job_date}")
                                 break
                     jobs.append({"name": job_title, "date": job_date, "location": job_location, "source": "OLX"})
-                return jobs
+            return jobs
 
         except requests.RequestException as e:
             print(f"Request error: {e}")
             return None
+
+olx = OLX_Scrapper()
+old = olx.fetch_jobs()
+print(old)
